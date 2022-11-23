@@ -1,0 +1,5 @@
+{
+    "ansible.executionEnvironment.pull.policy": "never",
+    "ansible.validation.enabled": false,
+    "ansible.validation.lint.enabled": false
+}

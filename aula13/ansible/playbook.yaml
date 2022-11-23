@@ -1,0 +1,79 @@
+- hosts: all # fazer algo em todos os hosts
+  become: true # se precirar use o sudo 
+  tasks: # aqui começa lista de tarefas 
+  - name: alterando nome dos hosts 
+    hostname:
+      name: '{{ new_hostname }}'
+
+  - name: adicionar chave GPG do docker
+    apt_key:
+      url: https://download.docker.com/linux/ubuntu/gpg
+      state: present
+
+  - name: adicionar repositório do instalador do docker
+    apt_repository:
+      repo: deb https://download.docker.com/linux/ubuntu bionic stable
+      state: present
+
+  - name: instalar o docker # mesma que fazer sudo apt-get install docker-ce docker-ce-cle containerd.io
+    apt:
+      name: "{{item}}"
+      state: latest
+      update_cache: yes
+    loop:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+        
+  - name: criando diretório de config do Docker
+    file: path=/etc/docker state=directory
+
+  - name: trocando driver do Docker para systemd
+    copy:
+      dest: "/etc/docker/daemon.json"
+      content: |
+        {
+        "exec-opts": ["native.cgroupdriver=systemd"]
+        }
+
+  - name: adicionar $USER no grupo Docker
+    ansible.builtin.user:
+      name: ubuntu
+      group: docker
+
+  - name: instalando APT Transport HTTPS
+    apt:
+      name: apt-transport-https
+      state: present
+
+  - name: adicionando Kubernetes apt-key
+    apt_key:
+      url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+      state: present
+
+  - name: adicionando Kubernetes APT repository
+    apt_repository:
+      repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
+      state: present
+
+  - name: instalando kubelet
+    apt:
+      name: kubelet=1.22.4-00
+      state: present
+      update_cache: true
+
+  - name: instalando kubeadm
+    apt:
+      name: kubeadm=1.22.4-00
+      state: present    
+  
+- hosts: controlplane
+  become: true
+  tasks:
+  - name: instalando kubectl
+    apt:
+      name: kubectl=1.22.4-00
+      state: present
+      force: yes
+
+

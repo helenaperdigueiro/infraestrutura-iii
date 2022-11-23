@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: banana-pod
+  labels:
+    app: back
+spec:
+  containers:
+    - name: nome-do-container
+      image: nginx
